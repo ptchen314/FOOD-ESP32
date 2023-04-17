@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-TW" style="height: 80%">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="height: 100%; margin: 0">
+  <div id="temp" style="width: 600;height: 300px"><p>五號溫度</p></div>
+  <div id="dht" style="width: 600;height: 300px"><p>五號濕度</p></div>
+  <script type="text/javascript" src="https://fastly.jsdelivr.net/npm/echarts@5.4.2/dist/echarts.min.js"></script>
+</body>
+  <script type="text/javascript">
+    var dom = document.getElementById('temp');
+    var myChart = echarts.init(dom, null, {
+      renderer: 'canvas',
+      useDirtyRect: false
+    });
+    var app = {};
+    var option;
+    option = {
+      series: [
+        {
+          type: 'gauge',
+          center: ['50%', '60%'],
+          startAngle: 200,
+          endAngle: -20,
+          min: 0,
+          max: 40,
+          splitNumber: 4,
+          itemStyle: {
+            color: '#FFAB91'
+          },
+          progress: {
+            show: true,
+            width: 30
+          },
+          pointer: {
+            show: false
+          },
+          axisLine: {
+            lineStyle: {
+              width: 30
+            }
+          },
+          axisTick: {
+            distance: -45,
+            splitNumber: 5,
+            lineStyle: {
+              width: 2,
+              color: '#999'
+            }
+          },
+          splitLine: {
+            distance: -52,
+            length: 14,
+            lineStyle: {
+              width: 3,
+              color: '#999'
+            }
+          },
+          axisLabel: {
+            distance: -20,
+            color: '#999',
+            fontSize: 20
+          },
+          anchor: {
+            show: false
+          },
+          title: {
+            show: false
+          },
+          detail: {
+            valueAnimation: true,
+            width: '70%',
+            lineHeight: 40,
+            borderRadius: 8,
+            offsetCenter: [0, '-15%'],
+            fontSize: 45,
+            fontWeight: 'bolder',
+            formatter: '{value} °C',
+            color: 'inherit'
+          },
+          data: [
+            {
+              value: {{Temperature}}
+            }
+          ]
+        },
+        {
+          type: 'gauge',
+          center: ['50%', '60%'],
+          startAngle: 200,
+          endAngle: -20,
+          min: 0,
+          max: 40,
+          itemStyle: {
+            color: '#FD7347'
+          },
+          progress: {
+            show: true,
+            width: 8
+          },
+          pointer: {
+            show: false
+          },
+          axisLine: {
+            show: false
+          },
+          axisTick: {
+            show: false
+          },
+          splitLine: {
+            show: false
+          },
+          axisLabel: {
+            show: false
+          },
+          detail: {
+            show: false
+          },
+          data: [
+            {
+              value: {{Temperature}}
+            }
+          ]
+        }
+      ]
+    };
+    setInterval(function () {
+      myChart.setOption({
+        series: [
+         {
+            data: [
+              {
+                value: {{Temperature}}
+              }
+            ]
+          },
+          {
+            data: [
+              {
+                value: {{Temperature}}
+              }
+            ]
+          }
+        ]
+      });
+    }, 2000);
+
+        if (option && typeof option === 'object') {
+          myChart.setOption(option);
+        }
+        window.addEventListener('resize', myChart.resize);
+  </script>
+
+<script type="text/javascript">
+  var dom = document.getElementById('dht');
+  var myChart = echarts.init(dom, null, {
+    renderer: 'canvas',
+    useDirtyRect: false
+  });
+  var app = {};
+  var option;
+  option = {
+    series: [
+      {
+        type: 'gauge',
+        center: ['50%', '60%'],
+        startAngle: 200,
+        endAngle: -20,
+        min: 0,
+        max: 100,
+        splitNumber: 10,
+        itemStyle: {
+          color: '#FFAB91'
+        },
+        progress: {
+          show: true,
+          width: 30
+        },
+        pointer: {
+          show: false
+        },
+        axisLine: {
+          lineStyle: {
+            width: 30
+          }
+        },
+        axisTick: {
+          distance: -45,
+          splitNumber: 5,
+          lineStyle: {
+            width: 2,
+            color: '#999'
+          }
+        },
+        splitLine: {
+          distance: -52,
+          length: 14,
+          lineStyle: {
+            width: 3,
+            color: '#999'
+          }
+        },
+        axisLabel: {
+          distance: -20,
+          color: '#999',
+          fontSize: 20
+        },
+        anchor: {
+          show: false
+        },
+        title: {
+          show: false
+        },
+        detail: {
+          valueAnimation: true,
+          width: '70%',
+          lineHeight: 40,
+          borderRadius: 8,
+          offsetCenter: [0, '-15%'],
+          fontSize: 40,
+          fontWeight: 'bolder',
+          formatter: '{value} RF%',
+          color: 'inherit'
+        },
+        data: [
+          {
+            value: {{DHT}}
+          }
+        ]
+      },
+      {
+        type: 'gauge',
+        center: ['50%', '60%'],
+        startAngle: 200,
+        endAngle: -20,
+        min: 0,
+        max: 100,
+        itemStyle: {
+          color: '#FD7347'
+        },
+        progress: {
+          show: true,
+          width: 8
+        },
+        pointer: {
+          show: false
+        },
+        axisLine: {
+          show: false
+        },
+        axisTick: {
+          show: false
+        },
+        splitLine: {
+          show: false
+        },
+        axisLabel: {
+          show: false
+        },
+        detail: {
+          show: false
+        },
+        data: [
+          {
+            value: {{DHT}}
+          }
+        ]
+      }
+    ]
+  };
+  setInterval(function () {
+    myChart.setOption({
+      series: [
+       {
+          data: [
+            {
+              value: {{DHT}}
+            }
+          ]
+        },
+        {
+          data: [
+            {
+              value: {{DHT}}
+            }
+          ]
+        }
+      ]
+    });
+  }, 2000);
+
+      if (option && typeof option === 'object') {
+        myChart.setOption(option);
+      }
+      window.addEventListener('resize', myChart.resize);
+</script>
+</html>

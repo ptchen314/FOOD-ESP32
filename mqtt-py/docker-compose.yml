@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  mqtt-all:
+    build: ./mqtt . 
+    container_name: MQTT-ALL
+    restart: on-failure
+    environment:
+      - TZ=Asia/Taipei
+    volumes:
+      - ./logs:/app/log
+  mqtt-gauge:
+    build: . 
+    container_name: MQTT-GAUGE
+    restart: on-failure
+    environment:
+      - TZ=Asia/Taipei
+    ports:
+      - "5000:80"
