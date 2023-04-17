@@ -5,9 +5,9 @@
 #include <DallasTemperature.h>
 #include <SimpleDHT.h>
 #include "EspMQTTClient.h"
-//你媽我比較可憐 這時候炸
 
-//Wifi 資料(PT手機)
+
+
 char ssid[] = "PT1+8pp";
 char password[] = "q5tk8asx";
 
