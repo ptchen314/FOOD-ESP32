@@ -1,5 +1,4 @@
-from discordwebhook import Discord
-from discordwebhook import Discord2 #DCwebhoooooooook
+from discordwebhook import Discord #DCwebhook
 from dotenv import load_dotenv #dotenv
 import os
 import paho.mqtt.client as mqtt
@@ -8,39 +7,42 @@ import requests
 import logging
 
 
-load_dotenv() #read ooooof
+load_dotenv() #read .env file
 #Log
-logging.basicConfig(filename='log/mqtt.log', encoding='utf-8', level=logging.INFO, datefmt='%a, %d %b %Y %H:%M:%S')
-#DC webhook
+logging.basicConfig(filename='log/mqtt.log', encoding='utf-8', level=logging.INFO, datefmt='%a, %d %b %Y %H:%M:%S') #log file
+#DC webhook login
 discord = Discord(url=os.getenv("DCWebhook"))
-discord2 = Discord2(url=os.getenv("DCWebhook2"))
 
-#Line notify登入
+#Line notify login
 def lineNotifyMessage(msg):
-    token = os.getenv("LINE_API_KEY")
+    token = os.getenv("LINE_API_KEY") # set line notify token
     headers = {
         "Authorization": "Bearer " + token, 
-        "Content-Type" : "application/x-www-form-urlencoded"
+        "Content-Type" : "application/x-www-form-urlencoded" #set header
     }
 
-    payload = {'message': msg }
-    r = requests.post("https://notify-api.line.me/api/notify", headers = headers, params = payload)
-    return r.status_code
+    payload = {'message': msg } #set payload
+    r = requests.post("https://notify-api.line.me/api/notify", headers = headers, params = payload) #post to line notify
+    return r.status_code #return status code
 
-
-# 當地端程式連線伺服器得到回應時，要做的動作
+#MQTT connect!
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
-    client.subscribe("FOOD/temp1")
+    client.subscribe("FOOD/temp1") #subscribe topic
 
+
+#MQTT get message!
 def on_message(client, userdata, msg):
-    # 轉換編碼utf-8才看得懂中文
-    data = msg.payload.decode('utf-8');
-    tempdata = json.loads(data)
-    warn=tempdata["warn"]
-    #1是開機，2是溫度異常，3是有人移動，4是正常，5是WiFi重連
+    data = msg.payload.decode('utf-8') # 用UTF-8 decode
+    tempdata = json.loads(data) # 轉成json
+    warn=tempdata["warn"] # 警告編號
+    # warn = "1" #start up
+    # warn = "2" #temp abnormal
+    # warn = "3" #humidity abnormal
+    # warn = "4" #normal
+    # warn = "5" #WiFi reconnect
     if  warn == "1":
-        lineNotifyMessage("\n連線成功，ESP32已經開機完成")
+        lineNotifyMessage("\n連線成功，ESP32已經開機完成") #line發資料
         dcwebhook("\n連線成功，ESP32已經開機完成")
         tgbot("\n連線成功，ESP32已經開機完成")
         client.publish("FOOD/temp", "五號開機完成")
@@ -82,36 +84,33 @@ def temp_send(t1,t2,t3,dht1):
     webdht=list(webdht)
     client.publish("FOOD/temp1/gaugetempweb", "".join('%s' %id for id in webt))
     client.publish("FOOD/temp1/gaugedhtweb", "".join('%s' %id for id in webdht))
-#dc 發資料
+
+#discord send message
 def dcwebhook(msg):
     discord.post(
-        content=msg,
-        username="PT-Notify"
+        content=msg, # 訊息內容
+        username="PT-Notify" # 修改Webhook名稱
     )
-    discord2.post(
-        content=msg,
-        username="PT-Notify"
-    )
-#tg發資料
+
+#telegram send message
 def tgbot(message):
-    apiToken = os.getenv("TGBOT")
-    chatID = '-1001949741732'
+    apiToken = os.getenv("TGBOT") #bot token
+    chatID = os.getenv("TGCHATID") #聊天室編號
     apiURL = f'https://api.telegram.org/bot{apiToken}/sendMessage'
     try:
-        response = requests.post(apiURL, json={'chat_id': chatID, 'text': message})
+        response = requests.post(apiURL, json={'chat_id': chatID, 'text': message}) #try to send message
     except Exception as e:
-        print(e)
+        print(e) #fuck up
 
 def thingspeak(t1,t2,t3,dht1):
-    httpget = {'field1': t1, 'field2': t2, 'field3': t3,'field4': dht1}
-    r = requests.get(os.getenv("THINGSPEAK"), params = httpget)
+    httpget = {'field1': t1, 'field2': t2, 'field3': t3,'field4': dht1} #set raw json data
+    r = requests.get(os.getenv("THINGSPEAK"), params = httpget) # http post
 
 # 連線設定
-# 初始化地端程式
+# 初始化地程式
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-client.username_pw_set("","")
-#keep-alive超過60會自爆，這個server就是遜啦
-client.connect("broker.MQTTGO.io", 1883, 60)
+client.username_pw_set(os.getenv("MQTTACC"),os.getenv("MQTTPASS"))
+client.connect(os.getenv("MQTTIP"), 1883, 60)
 client.loop_forever()
