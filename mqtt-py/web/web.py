@@ -14,20 +14,17 @@ Temp=0
 @mqtt.on_connect()
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
-    client.subscribe("FOOD/temp1/gaugetempweb")
-    client.subscribe("FOOD/temp1/gaugedhtweb")
+    client.subscribe("FOOD/temp1")
 
 @mqtt.on_message()
 def on_message(client, userdata, msg):
     global Temp #全域宣告
     global DHT
-    data = msg.payload.decode('utf-8');#解碼器
-    print(data)
-    data = json.loads(data) #json讀取
-    if data["type"]=="temp":
-        Temp = data["temp"]
-    elif data["type"]=="DHT":
-        DHT=data["dht"]
+    data = msg.payload.decode('utf-8') # 用UTF-8 decode
+    tempdata = json.loads(data) # 轉成json
+    print(tempdata)
+    Temp=(float(tempdata["temp1"])+float(tempdata["temp2"])+float(tempdata["temp3"]))/3
+    DHT=tempdata["DHT22"]
 
 @app.route("/")
 def main():

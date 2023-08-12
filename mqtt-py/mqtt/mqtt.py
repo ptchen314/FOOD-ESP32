@@ -73,17 +73,7 @@ def temp_send(t1,t2,t3,dht1):
     dcwebhook("".join('%s' %id for id in data))
     tgbot("".join('%s' %id for id in data))
     logging.info( '溫度一： %s  溫度二： %s  溫度三： %s 濕度一： %s' , t1  , t2 , t3 , dht1 )
-    # 轉成gauge用
-    te1=(float(t1)+float(t2)+float(t3))/3
-    te1=int(te1)
-    client.publish("FOOD/temp1/gaugetemp", te1)
-    client.publish("FOOD/temp1/gaugedht", dht1)
-    webt=("{\"type\":\"temp\",\"temp\":\"",te1,"\"}")
-    webdht=("{\"type\":\"DHT\",\"dht\":\"",dht1,"\"}")
-    webt=list(webt)
-    webdht=list(webdht)
-    client.publish("FOOD/temp1/gaugetempweb", "".join('%s' %id for id in webt))
-    client.publish("FOOD/temp1/gaugedhtweb", "".join('%s' %id for id in webdht))
+
 
 #discord send message
 def dcwebhook(msg):
@@ -111,6 +101,6 @@ def thingspeak(t1,t2,t3,dht1):
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-client.username_pw_set(os.getenv("MQTTACC"),os.getenv("MQTTPASS"))
-client.connect(os.getenv("MQTTIP"), 1883, 60)
+client.username_pw_set("","")
+client.connect('broker.mqttgo.io', 1883, 60)
 client.loop_forever()
