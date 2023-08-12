@@ -23,7 +23,8 @@ def on_message(client, userdata, msg):
     data = msg.payload.decode('utf-8') # 用UTF-8 decode
     tempdata = json.loads(data) # 轉成json
     print(tempdata)
-    Temp=(float(tempdata["temp1"])+float(tempdata["temp2"])+float(tempdata["temp3"]))/3
+    t1=(float(tempdata["temp1"])+float(tempdata["temp2"])+float(tempdata["temp3"]))/3
+    Temp=int(t1)
     DHT=tempdata["DHT22"]
 
 @app.route("/")
