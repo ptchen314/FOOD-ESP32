@@ -6,12 +6,43 @@ import json
 import requests
 import logging
 
-
 load_dotenv() #read .env file
 #Log
 logging.basicConfig(filename='log/mqtt.log', encoding='utf-8', level=logging.INFO, datefmt='%a, %d %b %Y %H:%M:%S') #log file
 #DC webhook login
 discord = Discord(url=os.getenv("DCWebhook"))
+
+#MQTT connect!
+def on_connect(client, userdata, flags, rc):
+    print("Connected with result code "+str(rc))
+    client.subscribe("FOOD/temp1") #subscribe topic
+
+#MQTT get message!
+def on_message(client, userdata, msg):
+    data = msg.payload.decode('utf-8') # 用UTF-8 decode
+    tempdata = json.loads(data) # 轉成json
+    warn=tempdata["warn"] # 警告編號
+    if  warn == "1":# warn = "1" #start up
+        lineNotifyMessage("\n連線成功，ESP32已經開機完成") #line發資料
+        dcwebhook("\n連線成功，ESP32已經開機完成")
+        tgbot("\n連線成功，ESP32已經開機完成")
+        client.publish("FOOD/temp", "五號開機完成")
+        temp_send(tempdata["temp1"],tempdata["temp2"],tempdata["temp3"],tempdata["DHT22"])
+    elif warn == "2":# warn = "2" #temp abnormal
+        lineNotifyMessage("\n魚塭溫度異常，請檢查魚塭狀態！")
+        dcwebhook("\n魚塭溫度異常，請檢查魚塭狀態！")
+        tgbot("\n魚塭溫度異常，請檢查魚塭狀態！")
+        temp_send(tempdata["temp1"],tempdata["temp2"],tempdata["temp3"],tempdata["DHT22"])
+    elif warn == "3":# warn = "3" #normal
+        temp_send(tempdata["temp1"],tempdata["temp2"],tempdata["temp3"],tempdata["DHT22"])
+    elif warn == "4":# warn = "4" #human found
+        lineNotifyMessage("\n魚塭附近有人移動！")
+        dcwebhook("\n魚塭附近有人移動！")
+        tgbot("\n魚塭附近有人移動！")
+    elif warn == "5":# warn = "5" #WiFi reconnect
+        lineNotifyMessage("\n連線成功，ESP32已經重新連線")
+        dcwebhook("\n連線成功，ESP32已經重新連線")
+        tgbot("\n連線成功，ESP32已經重新連線")
 
 #Line notify login
 def lineNotifyMessage(msg):
@@ -20,52 +51,11 @@ def lineNotifyMessage(msg):
         "Authorization": "Bearer " + token, 
         "Content-Type" : "application/x-www-form-urlencoded" #set header
     }
-
     payload = {'message': msg } #set payload
     r = requests.post("https://notify-api.line.me/api/notify", headers = headers, params = payload) #post to line notify
     return r.status_code #return status code
 
-#MQTT connect!
-def on_connect(client, userdata, flags, rc):
-    print("Connected with result code "+str(rc))
-    client.subscribe("FOOD/temp1") #subscribe topic
-
-
-#MQTT get message!
-def on_message(client, userdata, msg):
-    data = msg.payload.decode('utf-8') # 用UTF-8 decode
-    tempdata = json.loads(data) # 轉成json
-    warn=tempdata["warn"] # 警告編號
-    # warn = "1" #start up
-    # warn = "2" #temp abnormal
-    # warn = "3" #humidity abnormal
-    # warn = "4" #normal
-    # warn = "5" #WiFi reconnect
-    if  warn == "1":
-        lineNotifyMessage("\n連線成功，ESP32已經開機完成") #line發資料
-        dcwebhook("\n連線成功，ESP32已經開機完成")
-        tgbot("\n連線成功，ESP32已經開機完成")
-        client.publish("FOOD/temp", "五號開機完成")
-        temp_send(tempdata["temp1"],tempdata["temp2"],tempdata["temp3"],tempdata["DHT22"])
-        thingspeak(tempdata["temp1"],tempdata["temp2"],tempdata["temp3"],tempdata["DHT22"])
-    elif warn == "2":
-        lineNotifyMessage("\n魚塭溫度異常，請檢查魚塭狀態！")
-        dcwebhook("\n魚塭溫度異常，請檢查魚塭狀態！")
-        tgbot("\n魚塭溫度異常，請檢查魚塭狀態！")
-        temp_send(tempdata["temp1"],tempdata["temp2"],tempdata["temp3"],tempdata["DHT22"])
-    elif warn == "3":
-        temp_send(tempdata["temp1"],tempdata["temp2"],tempdata["temp3"],tempdata["DHT22"])
-        thingspeak(tempdata["temp1"],tempdata["temp2"],tempdata["temp3"],tempdata["DHT22"])
-    elif warn == "4":
-        lineNotifyMessage("\n魚塭附近有人移動！")
-        dcwebhook("\n魚塭附近有人移動！")
-        tgbot("\n魚塭附近有人移動！")
-    elif warn == "5":
-        lineNotifyMessage("\n連線成功，ESP32已經重新連線")
-        dcwebhook("\n連線成功，ESP32已經重新連線")
-        tgbot("\n連線成功，ESP32已經重新連線")
-
-#line發資料
+#發送資料
 def temp_send(t1,t2,t3,dht1):
     data=("\n5號 \n溫度計1:",t1, "℃\n溫度計2:",t2,"℃\n溫度計3:",t3 ,"℃\n濕度計1:",dht1," RH%")
     data=list(data)
@@ -73,7 +63,8 @@ def temp_send(t1,t2,t3,dht1):
     dcwebhook("".join('%s' %id for id in data))
     tgbot("".join('%s' %id for id in data))
     logging.info( '溫度一： %s  溫度二： %s  溫度三： %s 濕度一： %s' , t1  , t2 , t3 , dht1 )
-
+    httpget = {'field1': t1, 'field2': t2, 'field3': t3,'field4': dht1} #set raw json data
+    r = requests.get(os.getenv("THINGSPEAK"), params = httpget) # http post
 
 #discord send message
 def dcwebhook(msg):
@@ -91,10 +82,6 @@ def tgbot(message):
         response = requests.post(apiURL, json={'chat_id': chatID, 'text': message}) #try to send message
     except Exception as e:
         print(e) #fuck up
-
-def thingspeak(t1,t2,t3,dht1):
-    httpget = {'field1': t1, 'field2': t2, 'field3': t3,'field4': dht1} #set raw json data
-    r = requests.get(os.getenv("THINGSPEAK"), params = httpget) # http post
 
 # 連線設定
 # 初始化地程式
