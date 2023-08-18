@@ -8,13 +8,14 @@
 
 
 
-char ssid[] = "PT1+8pp";
-char password[] = "q5tk8asx";
+char ssid[] = "PT";
+char password[] = "qmui5953";
 
 //溫度感測器
 const int oneWireBus = 32;
 const int oneWireBus2 = 33;
 const int oneWireBus3 = 25;
+const int potPin=5;
 OneWire oneWire(oneWireBus);
 OneWire oneWire2(oneWireBus2);
 OneWire oneWire3(oneWireBus3);
@@ -39,6 +40,9 @@ unsigned long interval = 30000;
 int sec = 300;
 int reboot = 0;
 
+// Ph
+float ph;
+float Value=0;
 
 //MQTT
 EspMQTTClient client(
@@ -66,6 +70,7 @@ void setup()    {
   }
   Serial.println("連線完成");
   sensors.begin();
+  pinMode(potPin,INPUT);
 }
 
 void onConnectionEstablished() {
@@ -148,7 +153,8 @@ String gethottemp(){
   sensors3.requestTemperatures();
   float temperatureC3 = sensors3.getTempCByIndex(0);
   int dhumidity = d22humidity();
-  String temp = "{\"warn\":\"2\",\"temp1\":\"" + String(temperatureC) + "\",\"temp2\":\"" + String(temperatureC2) + "\",\"temp3\":\"" + String(temperatureC3) + "\",\"DHT22\":\"" + dhumidity + "\"}";
+  int ph= PHsenser();
+  String temp = "{\"warn\":\"2\",\"temp1\":\"" + String(temperatureC) + "\",\"temp2\":\"" + String(temperatureC2) + "\",\"temp3\":\"" + String(temperatureC3) + "\",\"DHT22\":\"" + dhumidity +  "\",\"PH\":\"" + ph + "\"}";
   return temp;
 }
 
@@ -162,7 +168,8 @@ String gettempmqtt(){
   sensors3.requestTemperatures();
   float temperatureC3 = sensors3.getTempCByIndex(0);
   int dhumidity = d22humidity();
-  String temp = "\"temp1\":\"" + String(temperatureC) + "\",\"temp2\":\"" + String(temperatureC2) + "\",\"temp3\":\"" + String(temperatureC3) + "\",\"DHT22\":\"" + dhumidity + "\"}";
+  int ph= PHsenser();
+  String temp = "\"temp1\":\"" + String(temperatureC) + "\",\"temp2\":\"" + String(temperatureC2) + "\",\"temp3\":\"" + String(temperatureC3) + "\",\"DHT22\":\"" + dhumidity +  "\",\"PH\":\"" + ph + "\"}";
   return temp;
 }
 
@@ -188,4 +195,11 @@ void WifiConnect()    {
   client.publish("FOOD/temp1",  "{\"warn\":\"5\"}");
   sensors.begin();
 
+}
+
+int PHsenser(){
+  Value= analogRead(potPin);
+  float voltage=Value*(3.3/4095.0);
+  ph=(3.3*voltage);
+  return (int)ph;
 }
